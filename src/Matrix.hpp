@@ -30,7 +30,7 @@ public:
   void randomize(int limit);
 
   /* DISPLAY */
-  void hungarianState(int row_reduce[], int col_reduce[]);
+  void hungarianState(std::pair<int*, int*> reduction);
 
   /* OPERATORS */
   // for retrieving an element for the matrix

@@ -32,16 +32,38 @@
  /* STEP 1 (Subtract Row Minima):
     For each row, find the lowest element and subtract it from each element
     in that row.*/
-  void subtractRowMinima(){
-    /* */
+  void subtractRowMinima(Matrix* matrix, pair<int*, int*>* reduction){
+    /*
+      @param: (Matrix *) matrix:
+      @param: (pair<int*, int*>*) reduction:
+      @description:
+    */
+    int smallest_in_row;
+    for(int r = 0; r < WIDTH; r++){
+      smallest_in_row = (*matrix).getMinOfRow(r);
+      (*reduction).first[r] = smallest_in_row;
+
+      for(int c = 0; c < WIDTH; c++){
+        (*matrix)(r,c) -= smallest_in_row;
+      }
+    }
   }
 
 
  /* STEP 2 (Subtract Column Minima):
     Similarly, for each column, find the lowest element and subtract it from
     each element in that column. */
-  void subtractColMinima(){
+  void subtractColMinima(Matrix* matrix, pair<int*, int*>* reduction){
     /* */
+    int smallest_in_col;
+    for(int c = 0; c < WIDTH; c++){
+      smallest_in_col = (*matrix).getMinOfCol(c);
+      (*reduction).second[c] = smallest_in_col;
+
+      for(int r = 0; r < WIDTH; r++){
+        (*matrix)(r,c) -= smallest_in_col;
+      }
+    }
   }
 
 
@@ -89,13 +111,23 @@ void calculateTotalCost(){
    problem.randomize(LIMIT);
    Matrix solution = Matrix(problem);
 
+   // ARRAYS FOR STORING COVER AND REDUCTION
+   int row_cover[WIDTH], col_cover[WIDTH], row_reduce[WIDTH], col_reduce[WIDTH];
+   for(int i = 0; i < WIDTH; i++)
+     row_cover[i] = col_cover[i] = row_reduce[i] = col_reduce[i] = 0;
+
+
    // REDUCTION SETUP
    // FIRST: ROW, SECOND: COLUMN
-   pair<int*, int*> reduction (int[WIDTH], int[WIDTH]);
+   pair<int*, int*> reduction;
+   reduction.first = row_reduce;
+   reduction.second = col_reduce;
 
    // COVERING SETUP
    // FIRST: ROW, SECOND: COLUMN
-   pair<int*, int*> cover (int[WIDTH], int[WIDTH]);
+   pair<int*, int*> cover;
+   cover.first = row_cover;
+   cover.second = col_cover;
 
    // STATE SETUP
    STATE state = SUB_ROW; // initialize the state to step 1
@@ -105,17 +137,22 @@ void calculateTotalCost(){
    cout << "Hungarian Algorithm (C++)" << endl;
    cout << setfill('-') << setw(80) << "-" << endl;
 
+   /* PRESENTATION OF PROBLEM */
+   cout << endl << problem << endl;
+
    /* HUNGARIAN ALGORITHM FSM */
    while(!(state == COMPLETE)){
 
      switch(state){
        case(SUB_ROW):
         printf("\nstate: subtract row minima\n");
+        subtractRowMinima(&solution, &reduction);
         state = SUB_COL;
         break;
 
        case(SUB_COL):
         printf("\nstate: subtract column minima\n");
+        subtractColMinima(&solution, &reduction);
         state = COVER_ZEROES;
         break;
 
@@ -139,7 +176,7 @@ void calculateTotalCost(){
    }
 
    /* PRESENTATION OF SOLUTION */
-   cout << solution << endl;
+   solution.hungarianState(reduction);
 
    return 0;
  }

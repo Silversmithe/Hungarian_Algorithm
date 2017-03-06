@@ -113,18 +113,18 @@ void Matrix::randomize(int limit){
 }
 
 /* DISPLAY */
-void Matrix::hungarianState(int row_reduce[], int col_reduce[]){
+void Matrix::hungarianState(std::pair<int*, int*> reduction){
   /* */
   // ASSUMING ARRAYS PASSED HAVE SAME LENGTH AS WIDTH OF MATRIX
   // display column reduction
   std::cout << "\t\t[";
   for(int c = 0; c < WIDTH; c++)
-    printf("\t%d\t", col_reduce[c]);
+    printf("\t%d\t", reduction.second[c]);
   std::cout << "]\n" << std::endl;
 
   // display row and column
   for(int r = 0; r < WIDTH; r++){
-    printf("Machine %d: [%d]\t[", r, row_reduce[r]);
+    printf("Machine %d: [%d]\t[", r, reduction.first[r]);
     for(int c = 0; c < WIDTH; c++){
       std::cout << "\t" << field[r][c] << "\t";
     }
