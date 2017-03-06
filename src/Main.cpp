@@ -190,8 +190,59 @@ void createZeroes(Matrix* matrix, pair<int*, int*> cover){
 
 /* FINAL STEPS */
 /* ASSIGNMENT */
-void assignTasks(){
+void assignTasks(Matrix* solution, Matrix* problem, vector<int>* assignment){
   /* */
+  vector<vector<int> > zeroes;
+  for(int i = 0; i < WIDTH; i++)
+    zeroes.push_back(vector<int>());
+
+  // get all the zeroes first
+  for(int r = 0; r < WIDTH; r++){
+    for(int c = 0; c < WIDTH; c++){
+      if((*solution)(r,c) == 0)
+        zeroes[r].push_back(c);
+    }
+  }
+
+  // display zeroes
+  for(int r = 0; r < zeroes.size(); r++){
+    printf("r: %d, c: ", r);
+    for(int c = 0; c < zeroes[r].size(); c++){
+      printf(" %d ", zeroes[r][c]);
+    }
+    printf("\n");
+  }
+
+  // actually do the assignment now
+
+  // if a row only has one zero, you gotta take it
+  for(int r = 0; r < zeroes.size(); r++){
+    if(zeroes[r].size() == 1)
+      (*assignment)[r] = zeroes[r][0];
+  }
+  // if you have a number that no one else has, you got to take it
+  for(int r = 0; r < zeroes.size(); r++){
+    // skip the ones that have been already been assigned at this point
+    if((*assignment)[r] != -1) continue;
+    for(int c = 0; c < zeroes[r].size(); c++){
+
+      int value = zeroes[r][c];
+
+      // see if there is any other value like this one
+      for(int row = 0; row < zeroes.size(); row++){
+        for(int col = 0; col < zeroes[row].size(); col++){
+          
+        }
+      }
+
+    }
+  }
+
+  // display assignment
+  printf("[");
+  for(int i = 0; i < (*assignment).size(); i++)
+    printf(" %d ", (*assignment)[i]);
+  printf("]\n");
 
 }
 
@@ -215,7 +266,6 @@ void calculateTotalCost(){
    for(int i = 0; i < WIDTH; i++)
      row_cover[i] = col_cover[i] = row_reduce[i] = col_reduce[i] = 0;
 
-
    // REDUCTION SETUP
    // FIRST: ROW, SECOND: COLUMN
    pair<int*, int*> reduction;
@@ -227,6 +277,10 @@ void calculateTotalCost(){
    pair<int*, int*> cover;
    cover.first = row_cover;
    cover.second = col_cover;
+
+   // ASSIGNMENT
+   vector<int> assignment;
+   for(int i = 0; i < WIDTH; i++) assignment.push_back(-1);
 
    // STATE SETUP
    STATE state = SUB_ROW; // initialize the state to step 1
@@ -276,6 +330,7 @@ void calculateTotalCost(){
 
        case(ASSIGN):
         printf("\nstate: assignment\n");
+        assignTasks(&solution, &problem, &assignment);
         state = COMPLETE;
         break;
        default:
