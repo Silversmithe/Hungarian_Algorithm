@@ -27,21 +27,22 @@
   COMPLETE
  };
 
+/* DEFINING MATRIX COVER */
  enum COVER{
    UNCOVERED,
    COVERED
  };
 
- /* HUNGARIAN ALGORITHM STEPS */
-
- /* STEP 1 (Subtract Row Minima):
-    For each row, find the lowest element and subtract it from each element
-    in that row.*/
-  void subtractRowMinima(Matrix* matrix, pair<int*, int*>* reduction){
+/* HUNGARIAN ALGORITHM STEPS */
+void subtractRowMinima(Matrix* matrix, pair<int*, int*>* reduction){
     /*
       @param: (Matrix *) matrix:
       @param: (pair<int*, int*>*) reduction:
       @description:
+
+      STEP 1 (Subtract Row Minima):
+         For each row, find the lowest element and subtract it from each element
+         in that row.
     */
     int smallest_in_row;
     for(int r = 0; r < WIDTH; r++){
@@ -54,15 +55,15 @@
     }
   }
 
-
- /* STEP 2 (Subtract Column Minima):
-    Similarly, for each column, find the lowest element and subtract it from
-    each element in that column. */
-  void subtractColMinima(Matrix* matrix, pair<int*, int*>* reduction){
+void subtractColMinima(Matrix* matrix, pair<int*, int*>* reduction){
     /*
       @param: (Matrix *) matrix:
       @param: (pair<int*, int*>*) reduction:
       @description:
+
+      STEP 2 (Subtract Column Minima):
+         Similarly, for each column, find the lowest element and subtract it from
+         each element in that column.
     */
     int smallest_in_col;
     for(int c = 0; c < WIDTH; c++){
@@ -75,17 +76,17 @@
     }
   }
 
-
-/*  STEP 3 (Cover all zeros with a minimum number of lines):
-    Cover all zeros in the resulting matrix using a minimum number of horizontal
-    and vertical lines. If n lines are required, an optimal assignment exists
-    among the zeros. The algorithm stops.
-    If less than n lines are required, continue with Step 4. */
-  void coverZeroes(Matrix matrix, pair<int*, int*>* cover){
+void coverZeroes(Matrix matrix, pair<int*, int*>* cover){
     /*
       @param: (Matrix) matrix:
       @param: (pair<int*, int*>*) cover:
       @description:
+
+      STEP 3 (Cover all zeros with a minimum number of lines):
+          Cover all zeros in the resulting matrix using a minimum number of horizontal
+          and vertical lines. If n lines are required, an optimal assignment exists
+          among the zeros. The algorithm stops.
+          If less than n lines are required, continue with Step 4.
     */
     int row_zero_count=0, col_zero_count=0;
     stack<int> row_zeroes;
@@ -138,11 +139,13 @@
     for(int i = 0; i < WIDTH; i++)
       printf("[%d] [%d]\n", (*cover).first[i], (*cover).second[i]);
 
-}
+  }
 
-/* STEP 3.5 Check if the cover is assignable or not */
-  bool isAssignable(pair<int*, int*> cover){
-    /* */
+bool isAssignable(pair<int*, int*> cover){
+    /*
+      @param: (pair<int*, int*>) cover:
+      @description: STEP 3.5 Check if the cover is assignable or not
+    */
     int sum=0;
     for(int i = 0; i < WIDTH; i++)
       sum += cover.first[i] + cover.second[i];
@@ -150,12 +153,39 @@
     return sum >= WIDTH;
   }
 
-/*  STEP 4 (Create additional zeros):
-    Find the smallest element (call it k) that is not covered by a line in
-    Step 3. Subtract k from all uncovered elements, and add k to all elements
-    that are covered twice. */
-void createZeroes(){
-  /* */
+void createZeroes(Matrix* matrix, pair<int*, int*> cover){
+  /*
+    @param: (Matrix*) matrix:
+    @param: (pair<int*, int*>) cover:
+    @description:
+
+    STEP 4 (Create additional zeros):
+        Find the smallest element (call it k) that is not covered by a line in
+        Step 3. Subtract k from all uncovered elements, and add k to all elements
+        that are covered twice.
+  */
+  int min_val = LIMIT;
+  // find the smallest element that is not covered
+  for(int r = 0; r < WIDTH; r++)
+    if(cover.first[r] == UNCOVERED)
+      for(int c = 0; c < WIDTH; c++)
+        if(cover.second[c] == UNCOVERED)
+          min_val = min(min_val, (*matrix)(r,c));
+
+  printf("Smallest uncovered element: %d\n", min_val);
+  // subtract from all uncovered elements
+  // add it to all doubly covered elements
+  // do nothing to singly covered elements
+  for(int r = 0; r < WIDTH; r++){
+    for(int c = 0; c < WIDTH; c++){
+      if(cover.first[r] == COVERED && cover.second[c] == COVERED)
+        (*matrix)(r,c) += min_val;
+      else if(cover.first[r] == UNCOVERED && cover.second[c] == UNCOVERED)
+        (*matrix)(r,c) -= min_val;
+      // else do nothing
+    }
+  }
+
 }
 
 /* FINAL STEPS */
@@ -200,6 +230,7 @@ void calculateTotalCost(){
 
    // STATE SETUP
    STATE state = SUB_ROW; // initialize the state to step 1
+   bool assignable = false; // for checking job assignability
 
    /* INTRODUCTION */
    cout << setfill('-') << setw(80) << "-" << endl;
@@ -228,8 +259,9 @@ void calculateTotalCost(){
        case(COVER_ZEROES):
         printf("\nstate: minimum zero covering\n");
         coverZeroes(solution, &cover);
-        bool assignable = isAssignable(cover);
+        assignable = isAssignable(cover);
         printf("Is this cover Assignable?: %d\n", assignable);
+
         if(assignable)
           state = ASSIGN;
         else
@@ -238,7 +270,7 @@ void calculateTotalCost(){
 
        case(CREATE_ZEROES):
         printf("\nstate: create zeroes\n");
-        
+        createZeroes(&solution, cover);
         state = COVER_ZEROES;
         break;
 
@@ -250,6 +282,7 @@ void calculateTotalCost(){
         printf("\nerror: unknown state\n");
      }
    }
+   printf("\nstate: complete\n");
 
    /* PRESENTATION OF SOLUTION */
    printf("\n");
