@@ -12,7 +12,7 @@
  #include <vector>
  #include "Matrix.hpp"
 
- #define WIDTH 5
+ #define WIDTH 4
  #define LIMIT 10
 
  using namespace std;
@@ -25,6 +25,11 @@
   CREATE_ZEROES,
   ASSIGN,
   COMPLETE
+ };
+
+ enum COVER{
+   UNCOVERED,
+   COVERED
  };
 
  /* HUNGARIAN ALGORITHM STEPS */
@@ -54,7 +59,11 @@
     Similarly, for each column, find the lowest element and subtract it from
     each element in that column. */
   void subtractColMinima(Matrix* matrix, pair<int*, int*>* reduction){
-    /* */
+    /*
+      @param: (Matrix *) matrix:
+      @param: (pair<int*, int*>*) reduction:
+      @description:
+    */
     int smallest_in_col;
     for(int c = 0; c < WIDTH; c++){
       smallest_in_col = (*matrix).getMinOfCol(c);
@@ -72,13 +81,73 @@
     and vertical lines. If n lines are required, an optimal assignment exists
     among the zeros. The algorithm stops.
     If less than n lines are required, continue with Step 4. */
-  void coverZeroes(){
-    /* */
-  }
+  void coverZeroes(Matrix matrix, pair<int*, int*>* cover){
+    /*
+      @param: (Matrix) matrix:
+      @param: (pair<int*, int*>*) cover:
+      @description:
+    */
+    int row_zero_count=0, col_zero_count=0;
+    stack<int> row_zeroes;
+
+    /* INITIALIZE COVERING */
+    for(int i = 0; i < WIDTH; i++)
+      (*cover).first[i] = (*cover).second[i] = UNCOVERED;
+
+    for(int r = 0; r < WIDTH; r++){
+      row_zero_count = 0;
+      // count the zeroes in this row
+      for(int c = 0; c < WIDTH; c++){
+        // look for zeroes
+        if(matrix(r,c) == 0){
+          // if there is a zero, record its column index
+          // count the zero
+          row_zeroes.push(c);
+          row_zero_count += 1;
+        }
+      }
+
+      // backtrack to the zeroes in this row & count up the zeroes in these
+      // columns, and make a decision on how to mark
+      while(!row_zeroes.empty()){
+        int index = row_zeroes.top();
+        row_zeroes.pop();
+        for(int row = 0; row < WIDTH; row++){
+          if(matrix(row, index) == 0){
+            col_zero_count += 1;
+          }
+        }
+        // decide if the column has more zeroes or the row and mark the one with
+        // more zeroes
+        if(col_zero_count > row_zero_count){
+          // mark the column
+          if((*cover).first[r] != COVERED)
+            (*cover).second[index] = COVERED;
+        } else{
+          // otherwise mark the row
+          if((*cover).second[index] != COVERED)
+            (*cover).first[r] = COVERED;
+        }
+        // reset the zero count
+        col_zero_count = 0;
+      }
+    }
+
+    /* PRESENT COVERING */
+    printf("row col\n");
+    for(int i = 0; i < WIDTH; i++)
+      printf("[%d] [%d]\n", (*cover).first[i], (*cover).second[i]);
+
+}
 
 /* STEP 3.5 Check if the cover is assignable or not */
-  void isAssignable(){
+  bool isAssignable(pair<int*, int*> cover){
     /* */
+    int sum=0;
+    for(int i = 0; i < WIDTH; i++)
+      sum += cover.first[i] + cover.second[i];
+
+    return sum >= WIDTH;
   }
 
 /*  STEP 4 (Create additional zeros):
@@ -158,12 +227,19 @@ void calculateTotalCost(){
 
        case(COVER_ZEROES):
         printf("\nstate: minimum zero covering\n");
-        state = CREATE_ZEROES;
+        coverZeroes(solution, &cover);
+        bool assignable = isAssignable(cover);
+        printf("Is this cover Assignable?: %d\n", assignable);
+        if(assignable)
+          state = ASSIGN;
+        else
+          state = CREATE_ZEROES;
         break;
 
        case(CREATE_ZEROES):
         printf("\nstate: create zeroes\n");
-        state = ASSIGN;
+        
+        state = COVER_ZEROES;
         break;
 
        case(ASSIGN):
@@ -176,6 +252,7 @@ void calculateTotalCost(){
    }
 
    /* PRESENTATION OF SOLUTION */
+   printf("\n");
    solution.hungarianState(reduction);
 
    return 0;
